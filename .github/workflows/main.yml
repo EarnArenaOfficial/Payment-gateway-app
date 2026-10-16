@@ -1,51 +1,59 @@
- 
-name: Build Payment Gateway APK
+ name: Build Payment Gateway APK
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+workflow_dispatch:
+push:
+branches:
+- main
 
 permissions:
-  contents: read
+contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
+  - name: Setup Flutter
+    uses: subosito/flutter-action@v2
+    with:
+      channel: stable
 
-      - name: Initialize Flutter project if missing
-        run: |
-          if [ ! -f pubspec.yaml ]; then
-            flutter create \
-              --project-name payment_gateway_app \
-              --platforms=android,web \
-              .
-          fi
+  - name: Initialize Flutter project if missing
+    run: |
+      if [ ! -f pubspec.yaml ]; then
+        flutter create \
+          --project-name payment_gateway_app \
+          --platforms=android,web \
+          .
+      fi
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
+  - name: Save Flutter project to repository
+    run: |
+      git config user.name "github-actions[bot]"
+      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      git add .
+      if ! git diff --cached --quiet; then
+        git commit -m "Initialize Flutter application"
+        git push origin HEAD:main
+      fi
 
-      - name: Analyze Flutter project
-        run: flutter analyze
+  - name: Get Flutter dependencies
+    run: flutter pub get
 
-      - name: Build release APK
-        run: flutter build apk --release
+  - name: Analyze Flutter project
+    run: flutter analyze
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: payment-gateway-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 7
-          
+  - name: Build release APK
+    run: flutter build apk --release
+
+  - name: Upload APK artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: payment-gateway-apk
+      path: build/app/outputs/flutter-apk/app-release.apk
+      if-no-files-found: error
+      retention-days: 7
