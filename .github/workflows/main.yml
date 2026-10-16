@@ -1,11 +1,14 @@
-
+ 
 name: Build Payment Gateway APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -20,21 +23,29 @@ jobs:
         with:
           channel: stable
 
-      - name: Create Flutter project if needed
+      - name: Initialize Flutter project if missing
         run: |
           if [ ! -f pubspec.yaml ]; then
-            flutter create --project-name payment_gateway_app --platforms=android,web .
+            flutter create \
+              --project-name payment_gateway_app \
+              --platforms=android,web \
+              .
           fi
 
-      - name: Get dependencies
+      - name: Get Flutter dependencies
         run: flutter pub get
 
-      - name: Build APK
+      - name: Analyze Flutter project
+        run: flutter analyze
+
+      - name: Build release APK
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: payment-gateway-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
           
