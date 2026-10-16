@@ -23,7 +23,7 @@ jobs:
       - name: Create Flutter project if needed
         run: |
           if [ ! -f pubspec.yaml ]; then
-            flutter create --platforms=android,web .
+            flutter create --project-name payment_gateway_app --platforms=android,web .
           fi
 
       - name: Get dependencies
